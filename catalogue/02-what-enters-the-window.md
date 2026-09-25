@@ -6,11 +6,9 @@ An LLM agent with tool access runs in a loop: thought, action, observation. Mode
 
 Most architecture discussions treat this as a context lifecycle problem: how to compress, summarise, and evict old messages. That framing is incomplete. It treats observations as a given—something that already happened and must now be managed. In practice, the most effective interventions happen *before* the observation ever enters the agent’s context.
 
-This piece proposes a four-stage lifecycle for tool observations—retrieve, filter, present, evict—and ties presentation to a second, quieter problem: how you encode hierarchical and tabular structure once the payload is allowed in. The companion essay in this catalogue, [The Transcript Is a Bad Database](./01-the-transcript-is-a-bad-database.md), covers identity and claim-check pointers. Here the question is narrower: given that something must reach the model, how do you keep it from drowning the next thought?
+This piece proposes a four-stage lifecycle for tool observations—retrieve, filter, present, evict—and ties presentation to a second, quieter problem: how you encode hierarchical and tabular structure once the payload is allowed in. The companion essay in this catalogue, *The Transcript Is a Bad Database*, covers identity and claim-check pointers. Here the question is narrower: given that something must reach the model, how do you keep it from drowning the next thought?
 
 ![Observation lifecycle: retrieve, filter, present, evict](./assets/02-observation-lifecycle.png)
-
----
 
 ## The naive pipeline and where it breaks
 
@@ -23,8 +21,6 @@ In the simplest agent architecture, every tool result flows directly into the co
 **Tabular analysis.** An agent pulls line items. A single query can return thousands of rows. Inserting the full result set is wasteful—the agent needs aggregates, anomalies, and patterns, not raw rows.
 
 Cumulative growth, low signal density, and format mismatch. All three are observation management problems. No single technique solves all of them. Each wants intervention at a different stage.
-
----
 
 ## Stage 1: Retrieval
 
@@ -42,8 +38,6 @@ Even for non-hierarchical tools, retrieval scope matters. A transaction query th
 
 Their later work on [advanced tool use](https://www.anthropic.com/engineering/advanced-tool-use)—tool search with deferred loading, and programmatic tool calling that processes results in a code sandbox before anything returns to the model—pushes the same idea further: keep only a handful of critical tools loaded, discover the rest on demand, and let intermediate bulk never touch the window.
 
----
-
 ## Stage 2: Filtration
 
 Filtration happens *outside the agent’s context*—an intermediate step that reduces volume and raises signal density before results reach the agent.
@@ -57,8 +51,6 @@ The pattern aligns with FILCO-style sentence-level filtering ([Wang, Z. et al., 
 ### Sub-agent isolation
 
 Filtration need not be a single call. Complex logic—multi-step reasoning, cross-referencing, validation—can run in a dedicated sub-agent with its own context. The sub-agent’s observations never enter the parent. Only its final, distilled output does. LangChain’s writing on deep agents (Curme & Daugherty, 2026) names this the disposable-context pattern: the child’s window is expendable. If it hits its own limits, that failure stays isolated from the parent.
-
----
 
 ## Stage 3: Presentation
 
@@ -101,8 +93,6 @@ Reach for indented Markdown (or sexps, if you control both sides) for strict tre
 
 The meta-lesson matches the identifier advice in the companion essay: LLMs are not APIs. Match the training distribution—indented docs, code, tables—not the conventions of the protocol layer behind the model.
 
----
-
 ## Stage 4: Eviction and offloading
 
 Eviction manages observations that have outlived their usefulness. Filtration operates *before* entry; eviction operates *after*.
@@ -119,19 +109,11 @@ This is claim-check applied to observations rather than to identity. The pointer
 
 Production systems combine eviction strategies into a cascade. Long-horizon coding agents—Claude Code among them—tend to escalate as pressure grows: heuristic snips and offloads of large tool results first, then a structured LLM summary that keeps identifiers, error states, and the exact task in progress verbatim. Anthropic’s public [context management](https://www.anthropic.com/news/context-management) notes cover the editing and memory half of this story; the important design point is the order. The first tiers should avoid a model call. The final summary exists specifically to prevent trajectory elongation. Post-compaction, critical state files are re-read deterministically to rehydrate working context—again, from a store, not from the summary’s memory of a store.
 
----
-
 ## Mapping scenarios to stages
 
-| Scenario | Primary stage | Key technique | What you buy |
-| --- | --- | --- | --- |
-| Hierarchical search | Retrieval + presentation | Progressive disclosure, compact encoding | Growth bounded by branching factor |
-| Corpus RAG | Filtration | Filtration chain or sub-agent | Large token cut (measure yours) |
-| Tabular analysis | Eviction | Offload + scripting | Orders-of-magnitude reduction |
+![Mapping scenarios to lifecycle stages: hierarchical search, corpus RAG, and tabular analysis](./assets/02-scenario-stage-map.png)
 
 No single stage matters most. The right stage depends on the tool’s output characteristics. High-cardinality hierarchies need retrieval scoping. Low-precision search needs filtration. Large tables need offloading and programmatic access. Presentation format is a lever on every path.
-
----
 
 ## Takeaways
 
@@ -143,8 +125,6 @@ No single stage matters most. The right stage depends on the tool’s output cha
 
 What enters the window is a design choice. Treat it that way and the next thought has room to work. Treat it as inevitable and you will spend the rest of the run managing a dump you invited.
 
----
-
 ### Further reading
 
 - Lindenbauer et al., *The Complexity Trap* (observation masking), [arXiv:2508.21433](https://arxiv.org/abs/2508.21433)  
@@ -155,4 +135,4 @@ What enters the window is a design choice. Treat it that way and the next though
 - Fatemi, Halcrow & Perozzi, *Talk Like a Graph*, ICLR 2024, [arXiv:2310.04560](https://arxiv.org/abs/2310.04560)  
 - Nandakishore, *JTON / Zen Grid*, [arXiv:2604.05865](https://arxiv.org/abs/2604.05865)  
 - Matveev, TOON vs JSON generation, [arXiv:2603.03306](https://arxiv.org/abs/2603.03306)  
-- Related catalogue pieces: [The Transcript Is a Bad Database](./01-the-transcript-is-a-bad-database.md) · [The Side Channel](./03-the-side-channel.md)
+- Related catalogue pieces: *The Transcript Is a Bad Database* · *The Side Channel*

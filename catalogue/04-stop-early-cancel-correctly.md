@@ -6,8 +6,6 @@ In ordinary programming, early exits are a workhorse—guard clauses for readabi
 
 This is a working taxonomy of the early-exit patterns I’ve found useful, with when each one earns its keep—and then the mechanism layer underneath: how you cancel concurrent work without orphaning side effects, and how you coalesce duplicate work so peers don’t stampede the same expensive resolution. Knowing *when* to stop is product logic. Making stop cheap and correct is infrastructure. Collapsing redundant work is the same instinct applied sideways.
 
----
-
 ## Four core patterns
 
 The four map onto two axes: *when* the decision happens (before vs during the agent) and *how* it’s expressed (separate model vs the agent’s own output).
@@ -22,7 +20,7 @@ A small, fast classifier runs before the main agent. If it rejects, the main age
 
 **Cons.** Context tax: if the gate needs the same context the main agent needs, you’ve duplicated input tokens—and created two places where context-shaping bugs can hide. Adds serial latency on the happy path, where most traffic lives in well-tuned systems. Two-model drift: gate and main agent can disagree about what “in scope” means as prompts evolve independently. False rejects are invisible unless you sample and review—the user just sees a refusal.
 
-**Where it shows up.** OpenAI’s Agents SDK documents this as **input guardrails**, with an explicit [blocking mode](https://openai.github.io/openai-agents-python/guardrails/) (`run_in_parallel=False`) so a tripwire prevents token spend and tool execution entirely. NVIDIA NeMo Guardrails calls these **input rails**. Anthropic’s [*Building effective agents*](https://www.anthropic.com/engineering/building-effective-agents) describes the **routing workflow**. Classical antecedents: guard clauses and design-by-contract preconditions.
+**Where it shows up.** OpenAI’s Agents SDK documents this as **input guardrails**, with an explicit [blocking mode](https://openai.github.io/openai-agents-python/guardrails/). Set `run_in_parallel` to false so a tripwire prevents token spend and tool execution entirely. NVIDIA NeMo Guardrails calls these **input rails**. Anthropic’s [Building effective agents](https://www.anthropic.com/engineering/building-effective-agents) describes the **routing workflow**. Classical antecedents: guard clauses and design-by-contract preconditions.
 
 ### 2. Optimistic execution
 
@@ -34,7 +32,7 @@ Gate and main agent fire concurrently. Gate failure cancels the in-flight main a
 
 OpenAI’s default guardrail mode is exactly this trade: parallel execution for latency, with the documented risk that the agent may already have consumed tokens and run tools before the tripwire fires. The hard part is not the product decision; it’s cancellation correctness.
 
-**Where it shows up.** Speculative execution in CPU pipelining (Hennessy & Patterson). Hedged requests (Dean & Barroso, [*The Tail at Scale*](https://cacm.acm.org/research/the-tail-at-scale/), CACM 2013)—related but not identical: hedging duplicates the *same* call; optimistic execution parallelizes *different* calls with a kill condition. Speculative decoding ([Leviathan et al., 2023](https://arxiv.org/abs/2211.17192)) is the same idea one layer down, at the token level.
+**Where it shows up.** Speculative execution in CPU pipelining (Hennessy & Patterson). Hedged requests (Dean & Barroso, [The Tail at Scale](https://cacm.acm.org/research/the-tail-at-scale/), CACM 2013)—related but not identical: hedging duplicates the *same* call; optimistic execution parallelizes *different* calls with a kill condition. Speculative decoding ([Leviathan et al., 2023](https://arxiv.org/abs/2211.17192)) is the same idea one layer down, at the token level.
 
 ### 3. Terminal tool calling
 
@@ -56,8 +54,6 @@ A boolean or enum field on the agent’s structured output indicates exit.
 
 **Where it shows up.** Structured-output and function-calling APIs generally; Result/Either types in functional programming (Wadler, 1995); Erlang/Elixir’s `{:ok, value} | {:error, reason}` convention.
 
----
-
 ## Closely related: agreement and budget
 
 Two concepts share the “stop early” instinct but solve different problems.
@@ -67,8 +63,6 @@ Two concepts share the “stop early” instinct but solve different problems.
 **Budget-based exit.** Hard cap on tokens, wall-clock time, or step count. Exit unconditionally when hit. Mandatory in production: without it, a single bad input can run unbounded. Trivially correct—no semantic reasoning—and provides hard SLO guarantees. The failure mode is uglier than it looks: cuts off mid-thought, hides real bugs behind “budget exceeded,” and picking the number is genuinely hard. AutoGPT made this famous by *not* having it; subsequent frameworks bake step caps in by default (LangGraph’s `recursion_limit`, OpenAI Agents SDK’s `max_turns`). Closest formal treatment: anytime algorithms (Dean & Boddy, 1988). Adjacent: the circuit-breaker pattern in distributed systems.
 
 You’ll typically run budget exit unconditionally and layer one or two of the four core patterns on top. Self-consistency is optional and domain-dependent.
-
----
 
 ## The mechanism layer: cancel correctly
 
@@ -90,8 +84,6 @@ Mapped back onto the taxonomy:
 
 Tag cancelled work in your traces. Untagged cancels will wreck your latency percentiles and make postmortems harder than the abort itself.
 
----
-
 ## Coalesce, don’t stampede
 
 Early exit avoids work you don’t need. **Singleflight**—Go’s name for the pattern, now widely ported—avoids work you’re about to do twice.
@@ -104,36 +96,22 @@ Use it when you can point at two (or more) agent runs that might honestly claim 
 
 One subtlety reserved for production: tipping an in-flight worker without busting the prompt-prefix cache. An inbox drained *after* a cache point on the next model request lets peers send progress notes (“sauté is 80%—start the grill”) without rewriting earlier turns. Append-only tips preserve cache; rewriting history to “update” shared state does not. That detail rhymes with the claim-check and roster advice in the first catalogue essay: mutate at the tail, not in the middle.
 
----
-
 ## Picking between them
 
-| Situation | Lean toward |
-| --- | --- |
-| High reject rate, cheap gate, happy-path latency acceptable | Precondition gating (blocking) |
-| Low reject rate, gate latency hurts the p50 | Optimistic execution—if you can cancel cleanly |
-| Exit must be a traced decision the model makes | Terminal tool |
-| Exit rides alongside structured content every turn | Control flag |
-| Hard SLO / runaway protection | Budget exit (always) |
-| Answers are comparable; adaptive compute helps | Self-consistency early stop |
-| Parallel tactics, first success wins | Disjunctive cancel (`resolved` / scoped `group`) |
-| Any branch can veto the whole run | Conjunction-break (`workflow`) |
-| Concurrent peers would recompute the same key | Singleflight |
+![When to lean toward each early-exit and cancellation pattern](./assets/04-picking-patterns.png)
 
 The pattern that gets reached for first is usually precondition gating, because it maps neatly onto how we think about input validation. But the right question isn’t “which pattern is best.” It’s: what’s the rejection rate, where does the latency budget live, and how observable does the exit need to be? Answer those and the pattern picks itself.
 
-Compose freely. Budget exit underneath everything. A blocking gate at the edge. Optimistic races inside for redundant tactics. A terminal abort tool for out-of-scope mid-flight. Singleflight on shared keys so the races you *do* start aren’t also stampedes. Surface aborts on the [side channel](./03-the-side-channel.md) when the UI needs to know why the spinner died.
+Compose freely. Budget exit underneath everything. A blocking gate at the edge. Optimistic races inside for redundant tactics. A terminal abort tool for out-of-scope mid-flight. Singleflight on shared keys so the races you *do* start aren’t also stampedes. Surface aborts on the side channel (*The Side Channel*) when the UI needs to know why the spinner died.
 
 What you should not do is hand-roll `CancelledError` plumbing at every call site, or hope the model will politely stop because the prompt asked it to. Prompts suggest. Cancellation tokens enforce. Treat them that way and early exit stops being a clever trick and becomes ordinary infrastructure—the kind that quietly saves the budget you would otherwise spend explaining a hung run.
-
----
 
 ### Further reading
 
 - [OpenAI Agents SDK, Guardrails](https://openai.github.io/openai-agents-python/guardrails/) (blocking vs parallel execution)  
-- Anthropic, [*Building effective agents*](https://www.anthropic.com/engineering/building-effective-agents) (routing workflows)  
+- Anthropic, [Building effective agents](https://www.anthropic.com/engineering/building-effective-agents) (routing workflows)  
 - Wang et al., Self-Consistency, [arXiv:2203.11171](https://arxiv.org/abs/2203.11171); Aggarwal et al., Adaptive-Consistency, [arXiv:2305.11860](https://arxiv.org/abs/2305.11860)  
-- Dean & Barroso, [*The Tail at Scale*](https://cacm.acm.org/research/the-tail-at-scale/) (hedged requests)  
+- Dean & Barroso, [The Tail at Scale](https://cacm.acm.org/research/the-tail-at-scale/) (hedged requests)  
 - Leviathan et al., speculative decoding, [arXiv:2211.17192](https://arxiv.org/abs/2211.17192)  
-- Go [`golang.org/x/sync/singleflight`](https://pkg.go.dev/golang.org/x/sync/singleflight)  
-- Related catalogue pieces: [The Side Channel](./03-the-side-channel.md) · [The Transcript Is a Bad Database](./01-the-transcript-is-a-bad-database.md)
+- Go [golang.org/x/sync/singleflight](https://pkg.go.dev/golang.org/x/sync/singleflight)  
+- Related catalogue pieces: *The Side Channel* · *The Transcript Is a Bad Database*

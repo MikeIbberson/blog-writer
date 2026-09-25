@@ -10,8 +10,6 @@ Wrong here means misassigned—wrongly bound, not hallucinated.
 
 This piece argues for a simple architectural habit: treat identity as runtime state outside the transcript, give the model a small typed roster to copy from, and pass payloads by pointer rather than by stuffing. The habit is old. What is new is that the message bus is now a context window, and context windows have failure modes Kafka does not.
 
----
-
 ## Why this one is hard to catch
 
 Hallucination around UUIDs, tokens, and other opaque keys is real, and we already push those checks downstream. Tool gateways should scope requests to an authorized session—one that can tell a good ID from a bad one, and will reject a ghost. Schema validation catches shape, not referent. A well-formed identifier that points at nothing, or at the wrong row, still passes the contract between the model and the function-calling API.
@@ -24,8 +22,6 @@ Take an incident-management agent where the requester has three open incidents a
 
 For destructive systems, this is operational risk, not a modelling puzzle. Assume you cannot close the gap entirely: design compensation as defence in depth, the way a [saga](https://learn.microsoft.com/en-us/azure/architecture/patterns/saga) undoes the steps that have already committed. Unwind what you can after the fact and audit what you cannot. The rest of this piece is how to need either of those less often.
 
----
-
 ## Binding is not resolution
 
 Teams pin binding misses on coreference resolution. Sometimes that is the mechanism, but it is not the whole problem. Binding is not resolution. Binding is narrower: which allowed object this action attaches to, in this run.
@@ -37,8 +33,6 @@ A June 2026 diagnostic from Rahul Suresh Babu and Shashank Indukuri ([Entity Bin
 Methods that drove wrong-entity to 0% in that testbed did it by not acting: confidence gates, clarification, pause. That trade-off is a product decision. Allow the agent to wait and some binding misses never become side-effects. Forbid it, and they do.
 
 AgentLTL ([arXiv:2607.02599](https://arxiv.org/abs/2607.02599)) frames the same concern as a trace-verification constraint—grounding as something you can check against a run’s history, not just hope for. A related industrial note, *The Semantic Training Gap* ([arXiv:2605.11234](https://arxiv.org/abs/2605.11234)), shows why schema constraints alone do not close it: a tool’s JSON schema enforces syntax, not whether the id the model chose is the one it meant. Gorilla-style failures persist even when arguments validate cleanly.
-
----
 
 ## Two ways a legal ID becomes the wrong one
 
@@ -58,8 +52,6 @@ Schemas catch a malformed ID before the call leaves the gate. Existence checks c
 
 A provenance check that every identifier in the answer appeared in some prior tool output catches invention. The wrong ID that *did* show up in the dump still passes, including a neighbour that should never have been dumped at all. That the string showed up earlier does not mean this action should use it.
 
----
-
 ## Copy, don’t recall
 
 If the value is already on the table, copy it. Do not generate it from memory.
@@ -72,11 +64,9 @@ Agent runs make that habit expensive. Tools dump records, catalogues get fat, an
 
 That last sentence is the architecture, not a prompt trick. The model should never be the system of record for the platform identifier. The runtime should.
 
----
-
 ## Position, rot, and the first thing the agent saw
 
-Retrieval is often worst when the relevant fact sits in the middle of a long context. Liu and colleagues showed this as a U-shaped curve in [*Lost in the Middle*](https://aclanthology.org/2024.tacl-1.9/) (TACL, 2024); one of the two tasks was key-value lookup, which is identifier work by another name. Quality then decays as input grows, well before the window is full, and distractors make it worse—Chroma’s [Context Rot](https://research.trychroma.com/context-rot) report (Hong, Troynikov, and Huber, July 2025) ran that finding across 18 models with the task held constant. Twenty near-identical opaque identifiers are textbook distractors: highly similar strings where only small details differ.
+Retrieval is often worst when the relevant fact sits in the middle of a long context. Liu and colleagues showed this as a U-shaped curve in [Lost in the Middle](https://aclanthology.org/2024.tacl-1.9/) (TACL, 2024); one of the two tasks was key-value lookup, which is identifier work by another name. Quality then decays as input grows, well before the window is full, and distractors make it worse—Chroma’s [Context Rot](https://research.trychroma.com/context-rot) report (Hong, Troynikov, and Huber, July 2025) ran that finding across 18 models with the task held constant. Twenty near-identical opaque identifiers are textbook distractors: highly similar strings where only small details differ.
 
 Earlier bindings interfere with later ones. Wang and Sun’s [Unable to Forget](https://arxiv.org/abs/2506.08184) (June 2025) streamed key-value updates and asked only for the latest. Accuracy declined as updates accumulated. Errors were *prior* values, even when the correct binding sat just before the query. Telling the model to ignore the old ones did not fix it.
 
@@ -85,8 +75,6 @@ Watch this in an agent and the requester has moved on to the second incident whi
 Follow-on work from the same programme ([Binding Drift in Multi-Step Tool-Augmented Agents](https://arxiv.org/abs/2607.18316), July 2026) makes the operational warning sharper. On a controlled multi-step testbed (200 workflows, eight model backends), even a correct first binding drifted later on about 18% of eligible workflows. Locking the first entity—persist what you bound at step one and never revisit it—eliminated that drift but amplified seeded early mistakes about threefold overall (up to 8.5× on some frontier models), because it carries a wrong first guess into every later step. A cheap second-call re-check against the original instruction cut wrong actions by about 79%, close to an oracle that already knew the answer. Rates characterize a diagnostic harness, not a production base rate—same caveat as the single-step paper.
 
 Treat the index of what is in play as a reminder, not a lock. Persistence and re-verification are not interchangeable. A defence that eliminates drift can worsen propagation.
-
----
 
 ## Compaction is lossy
 
@@ -97,8 +85,6 @@ A summary can keep the names and still lose the agent’s place in the work. Nok
 If the only copy of who we are talking about lives in the transcript, a later pass can erase it until the next tool call. **The transcript is a bad database for identifiers.**
 
 Anthropic’s [context-engineering note](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) says the same from the other side: hold lightweight identifiers, fetch the payload just in time. Referents the next action might need should be stable, fully specified, and few. The pointer lives in a store and the window holds a handle. The payload arrives when the action needs it.
-
----
 
 ## Claim-check: put the bag in the cloakroom
 
@@ -146,8 +132,6 @@ There is also a caching tension. Providers reward exact prefix reuse. Payloads t
 
 Where the pattern stops: when the model must *reason about* the contents, not merely *refer* to them. SurrogateShield (Jathanna, [arXiv:2606.29567](https://arxiv.org/abs/2606.29567)) finds that placeholder redaction of meaningful personal data degrades semantic coherence versus type-consistent surrogates (about 13 percentage points on their similarity metric in favour of surrogates). Referring is what pointers are for. Reasoning is not.
 
----
-
 ## What to actually build
 
 A two-tool lookup with one incident in context may not need any of this. Fat catalogues, many same-shaped IDs, and a multi-step run that will be summarised before it finishes: that is when hoping the middle of the window remembers which of theirs we meant starts to look like a strategy.
@@ -168,8 +152,6 @@ When it does, build this:
 
 Representation, a semantic handle, and a tail index reduce how often the in-scope swap is proposed. They do not retire the right to wait, and they do not replace the session check.
 
----
-
 ## What you still owe the business
 
 None of this makes the agent a system of record. It makes the agent less likely to propose a legal action against the wrong legal object.
@@ -182,8 +164,6 @@ A better model will not erase this. Binding misses happen when a system that com
 
 The rest is defence in depth for the cases where it still doesn’t hold.
 
----
-
 ### Further reading
 
 - Babu & Indukuri, *Entity Binding Failures in Tool-Augmented Agents*, [arXiv:2606.30531](https://arxiv.org/abs/2606.30531)  
@@ -195,4 +175,4 @@ The rest is defence in depth for the cases where it still doesn’t hold.
 - Willison, [Dual LLM pattern](https://simonwillison.net/2023/Apr/25/dual-llm-pattern/) (2023); Beurer-Kellner et al., [arXiv:2506.08837](https://arxiv.org/abs/2506.08837)  
 - Debenedetti et al., *Defeating Prompt Injections by Design* (CaMeL), [arXiv:2503.18813](https://arxiv.org/abs/2503.18813)  
 - Cemri et al., MAST / multi-agent failures, [arXiv:2503.13657](https://arxiv.org/abs/2503.13657)  
-- Related catalogue piece: [What Enters the Window](./02-what-enters-the-window.md)
+- Related catalogue piece: *What Enters the Window*

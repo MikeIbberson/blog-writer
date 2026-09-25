@@ -66,6 +66,7 @@ No accent colours. No gradients, glow, soft shadows, or blur. Contrast ≥ 4.5:1
 
 - **Yes:** hard-to-hold structure (lifecycles, failure modes, contrasts like stuffing vs pointer).
 - **Yes:** one hero per article for socials.
+- **Yes:** comparison / lookup tables that would otherwise be markdown `|` tables—Medium mangles those. Render as ink/paper table figures (see `scripts/render_catalogue_tables.py`) or as a structural diagram when the idea is relational rather than tabular.
 - **No:** decorative fillers, repeated motifs that don’t teach.
 
 ## Generation checklist

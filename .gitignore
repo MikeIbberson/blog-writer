@@ -1,4 +1,5 @@
 node_modules/
 _site/
+.venv/
 .DS_Store
 *.log
