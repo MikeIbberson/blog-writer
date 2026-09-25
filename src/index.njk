@@ -1,0 +1,26 @@
+---
+layout: layout.njk
+permalink: /
+title: blog-writer
+description: Essays on agent architecture and production LLM systems.
+---
+<section class="home-hero">
+  <h1 class="home-brand">blog-writer</h1>
+  <p class="home-lede">Essays on agent architecture—identity, observations, side channels, and knowing when to stop.</p>
+</section>
+
+<section class="essay-list" aria-label="Essays">
+  <ol>
+    {% for essay in collections.essays %}
+    <li>
+      <a class="essay-list-item" href="{{ essay.url | url }}">
+        <span class="essay-list-num" aria-hidden="true">{{ essay.fileSlug | essayNumber }}</span>
+        <span class="essay-list-body">
+          <span class="essay-list-title">{{ essay.data.title }}</span>
+          <span class="essay-list-excerpt">{{ essay.data.description }}</span>
+        </span>
+      </a>
+    </li>
+    {% endfor %}
+  </ol>
+</section>

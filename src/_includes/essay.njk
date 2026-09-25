@@ -1,0 +1,35 @@
+---
+layout: layout.njk
+---
+<article class="essay">
+  <nav class="essay-nav" aria-label="Essay">
+    <a href="{{ '/' | url }}">All essays</a>
+  </nav>
+
+  <div class="essay-body prose">
+    {{ content | safe }}
+  </div>
+
+  {% set prev = collections.essays | siblingEssay(page, "prev") %}
+  {% set next = collections.essays | siblingEssay(page, "next") %}
+
+  {% if prev or next %}
+  <nav class="essay-pager" aria-label="Adjacent essays">
+    {% if prev %}
+      <a class="pager-prev" href="{{ prev.url | url }}">
+        <span class="pager-label">Previous</span>
+        <span class="pager-title">{{ prev.data.title }}</span>
+      </a>
+    {% else %}
+      <span></span>
+    {% endif %}
+
+    {% if next %}
+      <a class="pager-next" href="{{ next.url | url }}">
+        <span class="pager-label">Next</span>
+        <span class="pager-title">{{ next.data.title }}</span>
+      </a>
+    {% endif %}
+  </nav>
+  {% endif %}
+</article>
