@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% if title and title != "blog-writer" %}{{ title }} — blog-writer{% else %}blog-writer{% endif %}</title>
+  <title>{% if title and title != "blog" %}{{ title }} — blog{% else %}blog{% endif %}</title>
   <meta name="description" content="{{ description | default('Essays on agent architecture and production LLM systems.') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,13 +13,13 @@
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
-    <a class="site-brand" href="{{ '/' | url }}">blog-writer</a>
+    <a class="site-brand" href="{{ '/' | url }}">blog</a>
   </header>
   <main id="main">
     {{ content | safe }}
   </main>
   <footer class="site-footer">
-    <p>blog-writer</p>
+    <p>blog</p>
   </footer>
 </body>
 </html>

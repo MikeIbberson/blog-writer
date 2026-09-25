@@ -1,4 +1,4 @@
-# blog-writer
+# blog
 
 Static site for the essays in `catalogue/`, built with [Eleventy](https://www.11ty.dev/) and deployed to GitHub Pages at `/blog-writer`.
 
