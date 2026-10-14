@@ -25,8 +25,9 @@ When drafting content in this project, write in the author’s voice as establis
 
 ## Rhythm & sentences
 
-- Default to medium sentences with clear logic; use longer sentences for explanation and short ones for emphasis or instruction.
-- Favor asides that sharpen meaning: em dashes, parentheses, and “i.e.” clarifications.
+- Default to medium sentences with clear logic; use longer sentences for explanation and short ones for emphasis or instruction. Prefer two clean sentences over one long sentence stuffed with asides.
+- Keep prose lean. Cut throat-clearing, stacked qualifiers, and clauses that only restate what the previous sentence already said.
+- Em dashes are allowed but scarce—at most one per short paragraph, and only when an aside truly sharpens meaning. Prefer commas, parentheses, a colon, or a second sentence. Do not chain em-dash asides or use them as default punctuation.
 - Use colons to set up lists or definitions; numbered reasons when comparing options (“for two reasons: (1)…; (2)…”).
 - Imperatives in how-tos (“Strike slowly…,” “Do not inhale the fumes…”). Declarative explanation elsewhere.
 - Occasional light idiom is fine when it fits (*crank up the amp*, *slap on the back*, *oodles*), but keep slang rare.
@@ -34,7 +35,7 @@ When drafting content in this project, write in the author’s voice as establis
 ## Word choice
 
 - Precise vocabulary over vague intensifiers. Prefer concrete nouns/verbs; elevate diction when it earns clarity (*allay*, *inundate*, *believably*), not for show.
-- Define technical terms inline on first use—em dash, parentheses, or a quick appositive (“sewering—accidentally sinking the cue ball”; “pickups, to convert the vibrating strings into signals…”).
+- Define technical terms inline on first use with a comma, parentheses, or a short appositive (“sewering, or accidentally sinking the cue ball”; “pickups, to convert the vibrating strings into signals…”). Reach for an em dash only when the definition needs a sharper break.
 - Contractions are natural (*it’s*, *don’t*, *you’ve*).
 - Prefer plain language that unveils over sophisticated language that cloaks—especially in pitches and marketing copy.
 - Avoid empty hype, buzzword stacks, emoji, and influencer cadence.
@@ -96,6 +97,7 @@ Medium’s editor keeps a narrow subset of structure. Author catalogue markdown 
 | Define terms as you go | Assume jargon or dump glossary walls |
 | Honest caveats beside benefits | Pure pep-talk or fear-mongering |
 | Chunked, scannable sections | Dense unbroken walls of text |
+| Lean sentences; commas, colons, or a second sentence | Em-dash stacks; long-winded multi-aside sentences |
 | Mentoring “you” with occasional “I” | Detached third-person lecture or faux-buddy banter |
 | Comparison data as table/diagram PNGs | Markdown tables in catalogue essays (Medium breaks them) |
 | Sibling essays named in plain prose | Hyperlinks between catalogue essays |
@@ -112,6 +114,6 @@ Medium’s editor keeps a narrow subset of structure. Author catalogue markdown 
 
 1. Infer the form from the brief (tutorial, essay, guide, strategy).
 2. Outline headings and chunking before drafting full prose.
-3. Draft in this voice; then cut filler, strengthen verbs/nouns, and add one concrete example or caution where a claim feels abstract.
+3. Draft in this voice; then cut filler, split long-winded sentences, ration em dashes, strengthen verbs/nouns, and add one concrete example or caution where a claim feels abstract.
 4. Before finishing a catalogue essay: run the Medium-safe checklist (tables → figures; no inter-essay links; no `---` dividers; no italic-in-link labels; absolute external URLs only).
 5. If unsure which register to use, default to the tutorial/guide voice in the billiards and guitar samples—clear, stepwise, lightly conversational—and escalate formality only as the topic demands (as in *Get Funded*).
