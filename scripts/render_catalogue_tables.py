@@ -305,6 +305,54 @@ def main() -> None:
         [1.55, 1.25],
     )
 
+    render_table(
+        OUT / "06-lifecycle-matrix.png",
+        ["Resource", "Policy model", "Critical question"],
+        [
+            [
+                "Checkpoints and snapshots",
+                "Retain while active or recoverable; compact and expire completed runs by recovery needs",
+                "Can this run still need the checkpoint?",
+            ],
+            [
+                "Conversation history",
+                "Task- or product-specific retention, with deletion and privacy controls",
+                "Needed for continuity, audit, or neither?",
+            ],
+            [
+                "Idempotency / dedup records",
+                "Retain across the maximum supported duplicate or retry window",
+                "Could a late retry repeat a side effect?",
+            ],
+            [
+                "Temporary scripts and scratch",
+                "Per-run or per-session workspace; clean up on completion or expiry",
+                "Deliverable or merely intermediate?",
+            ],
+            [
+                "Generated deliverables",
+                "Explicit ownership, promotion, and retention policy",
+                "Saved somewhere durable and user-accessible?",
+            ],
+            [
+                "Logs and traces",
+                "Retain for debugging, evaluation, compliance, and privacy needs",
+                "Necessary at this level of detail?",
+            ],
+            [
+                "Abandoned sessions / workspaces",
+                "Idle timeout, maximum lifetime, and a reaper for orphans",
+                "What if normal termination never occurs?",
+            ],
+            [
+                "Cached results and tool outputs",
+                "TTL plus invalidation rules where correctness requires them",
+                "Could stale data change a later decision?",
+            ],
+        ],
+        [1.15, 1.7, 1.35],
+    )
+
 
 if __name__ == "__main__":
     main()
